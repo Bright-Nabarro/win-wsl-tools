@@ -1,0 +1,144 @@
+#!/usr/bin/env sh
+set -eu
+
+show_usage() {
+    cat <<'EOF'
+Usage:
+  upath [-e|--escape] [PATH]
+
+Converts the current WSL directory, or PATH if provided, to a Windows path.
+
+Options:
+  -e, --escape    Double backslashes in the output
+
+Environment:
+  UPATH_MOUNT_ROOT  Override the WSL automount root. Default: /mnt
+
+Examples:
+  upath
+  upath -e
+  upath /mnt/c/Projects/demo
+EOF
+}
+
+canonical_path() {
+    input_path=$1
+
+    if [ -z "$input_path" ]; then
+        pwd -P
+        return
+    fi
+
+    if command -v realpath >/dev/null 2>&1; then
+        realpath -m -- "$input_path"
+        return
+    fi
+
+    if command -v readlink >/dev/null 2>&1; then
+        readlink -m -- "$input_path" 2>/dev/null && return
+    fi
+
+    case "$input_path" in
+        /*) printf '%s\n' "$input_path" ;;
+        *) printf '%s/%s\n' "$(pwd -P)" "$input_path" ;;
+    esac
+}
+
+to_backslashes() {
+    printf '%s' "$1" | sed 's#/#\\#g'
+}
+
+escape_backslashes() {
+    printf '%s' "$1" | sed 's/\\/\\\\/g'
+}
+
+wsl_distro_name() {
+    if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        printf '%s\n' "$WSL_DISTRO_NAME"
+        return
+    fi
+
+    if [ -r /etc/os-release ]; then
+        distro_id=$(sed -n 's/^ID=//p' /etc/os-release | head -n 1 | tr -d '"')
+        if [ -n "$distro_id" ]; then
+            printf '%s\n' "$distro_id"
+            return
+        fi
+    fi
+
+    printf '%s\n' Linux
+}
+
+escape=0
+target=
+mount_root=${UPATH_MOUNT_ROOT:-/mnt}
+mount_root=${mount_root%/}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -e|--escape|--escaped)
+            escape=1
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        --)
+            shift
+            if [ "$#" -gt 0 ]; then
+                target=$1
+                shift
+            fi
+            break
+            ;;
+        -*)
+            printf 'upath: unknown option: %s\n\n' "$1" >&2
+            show_usage >&2
+            exit 2
+            ;;
+        *)
+            if [ -n "$target" ]; then
+                printf 'upath: only one PATH argument is supported\n' >&2
+                exit 2
+            fi
+            target=$1
+            ;;
+    esac
+    shift
+done
+
+if [ "$#" -gt 0 ]; then
+    printf 'upath: only one PATH argument is supported\n' >&2
+    exit 2
+fi
+
+path=$(canonical_path "$target")
+
+case "$path" in
+    "$mount_root"/[A-Za-z]|"$mount_root"/[A-Za-z]/*)
+        drive_part=${path#"$mount_root"/}
+        drive=$(printf '%s' "$drive_part" | cut -c 1 | tr '[:lower:]' '[:upper:]')
+        rest=${drive_part#?}
+        rest=${rest#/}
+        if [ -z "$rest" ]; then
+            output="${drive}:\\"
+        else
+            output="${drive}:\\$(to_backslashes "$rest")"
+        fi
+        ;;
+    *)
+        distro=$(wsl_distro_name)
+        rest=${path#/}
+        if [ -z "$rest" ]; then
+            output="\\\\wsl.localhost\\${distro}\\"
+        else
+            output="\\\\wsl.localhost\\${distro}\\$(to_backslashes "$rest")"
+        fi
+        ;;
+esac
+
+if [ "$escape" -eq 1 ]; then
+    output=$(escape_backslashes "$output")
+fi
+
+printf '%s\n' "$output"
