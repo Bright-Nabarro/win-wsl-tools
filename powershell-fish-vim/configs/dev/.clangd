@@ -1,0 +1,19 @@
+---
+If:
+  PathMatch: '.*\.(h|c)$'
+CompileFlags:
+  Add:
+    - '-Wall'
+    - '-Wextra'
+    - '-xc'
+    - '-std=gnu23'
+---
+If:
+  PathMatch: '.*\.(cpp|hpp|cc|hh|cxx)$'
+CompileFlags:
+  Add:
+    - '-Wall'
+    - '-Wextra'
+    - '-xc++'
+    - '-std=c++23'
+---

@@ -1,13 +1,13 @@
 ---
 name: powershell-fish-vim
-description: Configure PowerShell 7 in Windows Terminal with a fish-like Oh My Posh prompt, PSReadLine Vi editing, Python venv display, cursor restoration, and duplicate-tab current-directory inheritance.
+description: Install privacy-sanitized terminal dotfiles for PowerShell 7, fish, Windows Terminal, WezTerm, Oh My Posh, PSReadLine Vi editing, and C/C++ tooling without changing the system default shell or terminal.
 ---
 
 # PowerShell Fish + Vim 配置说明
 
 ## 目标
 
-这套配置让 PowerShell 7 在 Windows Terminal 中获得接近 fish + Vim 的交互体验，同时保持 PowerShell 原有的命令和对象管道能力。
+这套配置让 PowerShell 7 和 fish 在 Windows Terminal/WezTerm 中获得一致的 Vim 风格交互体验，同时提供可移植的 C/C++ 工具配置。公开版本只保留通用设置，不包含个人路径、网络端点或系统默认项。
 
 最终效果：
 
@@ -22,6 +22,8 @@ description: Configure PowerShell 7 in Windows Terminal with a fish-like Oh My P
 - 成功提示符为绿色；上一条命令失败时显示红色提示符和退出码。
 - PSReadLine 使用 Vi 编辑模式。
 - Windows Terminal 复制标签页时可继承当前 Profile 和文件系统目录。
+- fish 与 WezTerm 采用对应的 Vi 键位、目录继承和标签/分屏键位。
+- 附带 clangd 与 clang-format 的 C23/C++23 通用配置。
 
 ## 环境与依赖
 
@@ -44,9 +46,17 @@ powershell-fish-vim/
 ├── configs/
 │   ├── Microsoft.PowerShell_profile.ps1
 │   ├── fish-vim.omp.json
-│   └── windows-terminal.fragment.jsonc
+│   ├── dev/
+│   │   ├── .clangd
+│   │   └── .clang-format
+│   ├── fish/config.fish
+│   ├── wezterm/wezterm.lua
+│   ├── windows-terminal.fragment.jsonc
+│   └── windows-terminal/
+│       └── settings.portable.jsonc
 └── scripts/
-    └── install.ps1
+    ├── install.ps1
+    └── install-wsl.sh
 ```
 
 ## 安装
@@ -87,17 +97,30 @@ pwsh -File .\scripts\install.ps1
 %USERPROFILE%\Documents\PowerShell\fish-vim.omp.json
 ```
 
-### 3. 合并 Windows Terminal 设置
+### 3. 安装 WSL/Linux 组件（可选）
 
-打开 Windows Terminal 的 `settings.json`，参考 `configs/windows-terminal.fragment.jsonc` 合并：
+安装器只处理明确选择的用户级配置，不运行 `chsh`、不修改 `/etc/shells`、不设置代理，也不修改默认终端：
 
-- PowerShell Profile 使用 `emptyBox` 光标。
+```bash
+./scripts/install-wsl.sh --fish --clang
+./scripts/install-wsl.sh --wezterm
+```
+
+可用参数是 `--fish`、`--wezterm`、`--clang` 和 `--all`。已有目标文件会移动到带时间戳的备份目录。
+
+### 4. 合并 Windows Terminal 设置
+
+打开 Windows Terminal 的 `settings.json`：
+
+- 参考 `configs/windows-terminal.fragment.jsonc` 合并最小设置；或
+- 从 `configs/windows-terminal/settings.portable.jsonc` 选择当前外观、Adventure 配色和有效快捷键。
+- PowerShell Profile 示例使用 `bar` 光标；可替换为自己的 `cursorShape`。
 - 使用 `Maple Mono NF CN` 字体。
 - `Ctrl+Shift+A` 绑定 `duplicateTab`。
 
-不要直接使用片段覆盖完整 `settings.json`，因为其中可能已有其他 Profile、快捷键、背景图片和配色。
+不要直接覆盖完整 `settings.json`。可移植快照有意不包含 `defaultProfile`、本机 Profile、绝对路径、背景图片、SSH 地址或命令行。
 
-### 4. 重新加载
+### 5. 重新加载
 
 重新打开 Windows Terminal，或者执行：
 
@@ -177,7 +200,7 @@ PSReadLine 内置的 `ViModeIndicator Cursor` 会在从 Normal 返回 Insert 后
 最终配置改用脚本模式：
 
 - Command/Normal：发送 `ESC [ 2 SP q`，使用稳定的实心块。
-- Insert：发送 `ESC [ 0 SP q`，恢复终端默认光标，因此重新使用 Windows Terminal 中配置的 `emptyBox`。
+- Insert：发送 `ESC [ 0 SP q`，恢复终端默认光标，因此重新使用 Windows Terminal 中配置的形状（当前去标识化快照为 `bar`）。
 
 ### fish 风格历史预测
 
@@ -226,6 +249,33 @@ mkcd path\to\new-directory
 
 `which` 映射到 `Get-Command`；`mkcd` 会创建目录并立即进入。
 
+### fish 与 WezTerm
+
+fish 配置从原 dotfiles 中保留了以下可移植行为：
+
+- `fish_vi_key_bindings` 和 Insert 模式 `Ctrl+E` 接受建议。
+- 通过 `OSC 9;9` 向 Windows Terminal 上报 WSL 当前目录。
+- `explorer_here`、`nvide`、`cppc` 和 `ccc` 通用助手。
+
+WezTerm 配置保留字体、Dracula 配色、滚动、透明度、标签/分屏和 Vim 风格面板焦点键位；所有标签和分屏都使用当前 Pane Domain。
+
+### C/C++ 工具配置
+
+- `.clangd` 为 C 文件添加 `gnu23`，为 C++ 文件添加 `c++23`，并启用 `-Wall -Wextra`。
+- `.clang-format` 使用 LLVM 基础风格、4 列 Tab、80 列限制和 Allman 大括号。
+
+### 隐私与排除项
+
+公开配置使用白名单整合。以下内容不会进入仓库：
+
+- 用户名、主机名、IP、代理、账号、密码、Token 和设备地址。
+- 用户目录、应用安装目录、背景图片等绝对本机路径。
+- SSH/FTP/移动设备传输脚本及其远端目录。
+- `chsh`、`/etc/shells`、系统默认终端或 Windows Terminal `defaultProfile` 修改。
+- 原始 dotfiles 中会强制删除目标文件的 setup 流程。
+
+Windows Terminal 快照只保留通用 PowerShell Profile、字体、光标、Adventure 配色和实际启用的快捷键。
+
 ## 修改过程与最终决策
 
 ### 初始配置
@@ -238,7 +288,7 @@ mkcd path\to\new-directory
 
 ### 光标修复
 
-1. 读取 Windows Terminal 的 PowerShell Profile，确认 `cursorShape` 为 `emptyBox`。
+1. 读取 Windows Terminal 的 PowerShell Profile；初次修复时预设形状为 `emptyBox`，当前可移植快照已同步为 `bar`。
 2. 将 `ViModeIndicator Cursor` 改为 `ViModeIndicator Script`。
 3. Normal 使用实心块，Insert 使用“恢复 Terminal 默认值”的控制序列。
 
@@ -254,6 +304,14 @@ mkcd path\to\new-directory
 第一次实现使用 PowerShell `prompt` 包装函数手动发送 `OSC 9;9`。控制序列验证正确，但实际 Windows Terminal 仍打开默认目录。
 
 该方案已经撤销。最终改用 Oh My Posh 自带的 `pwd: osc99`，让目录通知由生成提示符的同一组件负责，避免提示符包装与 Oh My Posh 生命周期冲突。
+
+### dotfiles 与 Windows Terminal 整合
+
+1. 从原 dotfiles 提取 fish、WezTerm、clangd 和 clang-format 的可移植部分。
+2. 删除代理、网络端点、账号凭据、设备传输脚本和绝对个人路径。
+3. 不复制修改默认 shell 的脚本，也不提供修改默认终端的设置。
+4. 从当前 Windows Terminal 生成去标识化快照，仅保留外观、配色和有效快捷键。
+5. 更新 README，使配置包从单一 PowerShell 主题扩展为 Windows + WSL 终端 dotfiles。
 
 ### 本机备份记录
 
@@ -346,6 +404,16 @@ $env:VIRTUAL_ENV
 
 字面意义的 `Ctrl+A` 保留给 PSReadLine 的“移动到行首”。Windows Terminal 复制标签页使用 `Ctrl+Shift+A`。
 
+### 隐私检查
+
+发布前可运行：
+
+```powershell
+rg -n -i "password|passwd|token|secret|api[_-]?key|proxy|ssh://|sftp://|[A-Z]:\\Users\\" powershell-fish-vim
+```
+
+还应人工检查 IPv4、用户名、主机名和仓库外绝对路径。匹配到文档中的安全关键词时需结合上下文判断。
+
 ## 参考资料
 
 - Oh My Posh 一般配置与 `pwd`：https://ohmyposh.dev/docs/configuration/general
@@ -354,3 +422,6 @@ $env:VIRTUAL_ENV
 - Windows Terminal 同目录标签页：https://learn.microsoft.com/windows/terminal/tutorials/new-tab-same-directory
 - Windows Terminal Actions：https://learn.microsoft.com/windows/terminal/customize-settings/actions
 - PSReadLine：https://learn.microsoft.com/powershell/module/psreadline/
+- fish Vi 模式：https://fishshell.com/docs/current/cmds/fish_vi_key_bindings.html
+- WezTerm 配置：https://wezterm.org/config/files.html
+- clangd 配置：https://clangd.llvm.org/config

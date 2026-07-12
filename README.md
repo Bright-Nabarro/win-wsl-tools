@@ -1,12 +1,14 @@
 # win-wsl-tools
 
-Tiny path helpers for moving between Windows PowerShell and WSL2.
+Portable helpers and sanitized terminal dotfiles for a productive Windows + WSL2 workflow.
 
 ## Tools
 
 - `wpath`: convert a Windows path to a WSL mount path.
 - `upath`: convert a WSL path to a Windows path or WSL UNC path.
 - `wslhere`: open WSL2 in Windows Terminal at the current PowerShell directory.
+
+- [`powershell-fish-vim`](./powershell-fish-vim/): portable PowerShell, fish, Windows Terminal, WezTerm and C/C++ tooling configuration.
 
 ## Install
 

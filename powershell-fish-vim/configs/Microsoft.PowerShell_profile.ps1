@@ -19,8 +19,8 @@ Set-PSReadLineOption `
     -MaximumHistoryCount 10000 `
     -ContinuationPrompt '  · '
 
-# Normal mode uses a steady block. Insert mode restores Windows Terminal's
-# configured cursorShape (currently "emptyBox") instead of forcing underline.
+# Normal mode uses a steady block. Insert mode restores the terminal's
+# configured cursorShape instead of forcing underline.
 Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler {
     param($Mode)
 

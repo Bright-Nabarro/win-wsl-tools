@@ -1,0 +1,118 @@
+// Sanitized snapshot of the active Windows Terminal experience.
+// Intentionally omitted: defaultProfile, machine-specific profiles,
+// command lines, SSH endpoints, background images and absolute paths.
+{
+  "$schema": "https://aka.ms/terminal-profiles-schema",
+  "copyFormatting": "none",
+  "copyOnSelect": false,
+  "theme": "dark",
+  "actions": [
+    {
+      "command": { "action": "copy", "singleLine": false },
+      "id": "User.copy"
+    },
+    {
+      "command": "find",
+      "id": "User.find"
+    },
+    {
+      "command": "duplicateTab",
+      "id": "User.duplicateTab"
+    },
+    {
+      "command": { "action": "splitPane", "split": "auto", "splitMode": "duplicate" },
+      "id": "User.splitPane"
+    },
+    {
+      "command": { "action": "prevTab" },
+      "id": "User.prevTab"
+    },
+    {
+      "command": { "action": "nextTab" },
+      "id": "User.nextTab"
+    },
+    {
+      "command": { "action": "moveTab", "direction": "backward" },
+      "id": "User.moveTabBackward"
+    },
+    {
+      "command": { "action": "moveTab", "direction": "forward" },
+      "id": "User.moveTabForward"
+    },
+    {
+      "command": { "action": "moveFocus", "direction": "left" },
+      "id": "User.focusLeft"
+    },
+    {
+      "command": { "action": "moveFocus", "direction": "down" },
+      "id": "User.focusDown"
+    },
+    {
+      "command": { "action": "moveFocus", "direction": "up" },
+      "id": "User.focusUp"
+    },
+    {
+      "command": { "action": "moveFocus", "direction": "right" },
+      "id": "User.focusRight"
+    },
+    {
+      "command": { "action": "commandPalette" },
+      "id": "User.commandPalette"
+    }
+  ],
+  "keybindings": [
+    { "id": "User.copy", "keys": "ctrl+c" },
+    { "id": "User.find", "keys": "ctrl+shift+f" },
+    { "id": "User.duplicateTab", "keys": "ctrl+shift+a" },
+    { "id": "User.splitPane", "keys": "ctrl+shift+p" },
+    { "id": "User.prevTab", "keys": "alt+h" },
+    { "id": "User.nextTab", "keys": "alt+l" },
+    { "id": "User.moveTabBackward", "keys": "ctrl+shift+[" },
+    { "id": "User.moveTabForward", "keys": "ctrl+shift+]" },
+    { "id": "User.focusLeft", "keys": "ctrl+shift+h" },
+    { "id": "User.focusDown", "keys": "ctrl+shift+j" },
+    { "id": "User.focusUp", "keys": "ctrl+shift+k" },
+    { "id": "User.focusRight", "keys": "ctrl+shift+l" },
+    { "id": "User.commandPalette", "keys": "ctrl+space" }
+  ],
+  "profiles": {
+    "defaults": {},
+    "list": [
+      {
+        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+        "name": "PowerShell",
+        "source": "Windows.Terminal.PowershellCore",
+        "colorScheme": "Adventure",
+        "cursorShape": "bar",
+        "font": {
+          "face": "Maple Mono NF CN"
+        }
+      }
+    ]
+  },
+  "schemes": [
+    {
+      "name": "Adventure",
+      "background": "#040404",
+      "black": "#040404",
+      "blue": "#417AB3",
+      "brightBlack": "#685656",
+      "brightBlue": "#97D7EF",
+      "brightCyan": "#BDCFE5",
+      "brightGreen": "#99B52C",
+      "brightPurple": "#AA7900",
+      "brightRed": "#D76B42",
+      "brightWhite": "#E4D5C7",
+      "brightYellow": "#FFB670",
+      "cursorColor": "#FEFFFF",
+      "cyan": "#BDCFE5",
+      "foreground": "#FEFFFF",
+      "green": "#5DA602",
+      "purple": "#E5C499",
+      "red": "#D84A33",
+      "selectionBackground": "#606060",
+      "white": "#DBDED8",
+      "yellow": "#EEBB6E"
+    }
+  ]
+}
