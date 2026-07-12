@@ -1,0 +1,29 @@
+// Merge these entries into Windows Terminal settings.json.
+// Do not replace the whole settings file with this fragment.
+{
+  "actions": [
+    {
+      "command": "duplicateTab",
+      "id": "User.duplicateTab"
+    }
+  ],
+  "keybindings": [
+    {
+      "id": "User.duplicateTab",
+      "keys": "ctrl+shift+a"
+    }
+  ],
+  "profiles": {
+    "list": [
+      {
+        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+        "name": "PowerShell",
+        "source": "Windows.Terminal.PowershellCore",
+        "cursorShape": "emptyBox",
+        "font": {
+          "face": "Maple Mono NF CN"
+        }
+      }
+    ]
+  }
+}
