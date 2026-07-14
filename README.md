@@ -1,16 +1,18 @@
 # win-wsl-tools
 
-Portable helpers and sanitized terminal dotfiles for a productive Windows + WSL2 workflow.
+Portable helpers and sanitized terminal dotfiles for a productive Windows + WSL2 + MSYS2 workflow.
 
 ## Tools
 
 - `wpath`: convert a Windows path to a WSL mount path.
+- `mpath`: convert a Windows path to an MSYS2 path.
 - `upath`: convert a WSL path to a Windows path or WSL UNC path.
+- `winpath`: convert an MSYS2 path to a Windows path.
 - `wslhere`: open WSL2 in Windows Terminal at the current PowerShell directory.
 
 - [`powershell-fish-vim`](./powershell-fish-vim/): portable PowerShell, fish, Windows Terminal, WezTerm and C/C++ tooling configuration.
 
-## Install
+## Deployment
 
 Windows:
 
@@ -18,13 +20,44 @@ Windows:
 .\install.ps1 -AddToPath
 ```
 
+This copies `mpath`, `wpath`, and `wslhere` to `$HOME\bin`. With
+`-AddToPath`, the installer also adds that directory to the user `PATH` when
+needed. The operation is idempotent and can be run again after updating the
+repository.
+
 WSL:
 
 ```sh
 ./install-wsl.sh
 ```
 
+This installs `upath` to `~/.local/bin`. Pass a directory as the first
+argument to use a different destination.
+
+MSYS2:
+
+```sh
+./install-msys2.sh
+```
+
+This installs `winpath` to `/usr/local/bin`, which is in the default MSYS2
+`PATH`. Pass a directory as the first argument to use a different destination:
+
+```sh
+./install-msys2.sh ~/.local/bin
+```
+
 Restart your shell after adding a directory to `PATH`.
+
+Verify the deployed commands:
+
+```powershell
+mpath E:\workspace\config
+```
+
+```sh
+winpath /e/workspace/config
+```
 
 ## Usage
 
@@ -36,6 +69,9 @@ wpath
 
 wpath C:\Projects\demo
 # /mnt/c/Projects/demo
+
+mpath E:\Projects\demo
+# /e/Projects/demo
 
 wslhere
 # Opens a new Windows Terminal tab using a WSL profile at the current directory.
@@ -52,6 +88,16 @@ upath -e /mnt/c/Projects/demo
 
 upath /home/user/project
 # \\wsl.localhost\Ubuntu\home\user\project
+```
+
+From MSYS2:
+
+```sh
+winpath /e/Projects/demo
+# E:\Projects\demo
+
+winpath -e /e/Projects/demo
+# E:\\Projects\\demo
 ```
 
 ## Configuration

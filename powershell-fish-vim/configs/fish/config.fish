@@ -16,6 +16,7 @@ function __report_pwd_to_windows_terminal --on-variable PWD
         printf "\e]9;9;%s\e\\" (wslpath -w "$PWD")
     end
 end
+__report_pwd_to_windows_terminal
 
 # Open the current WSL directory in Windows Explorer.
 function explorer_here

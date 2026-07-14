@@ -1,0 +1,76 @@
+#!/usr/bin/env sh
+set -eu
+
+show_usage() {
+    cat <<'EOF'
+Usage:
+  winpath [-e|--escape] [PATH]
+
+Converts the current MSYS2 directory, or PATH if provided, to a Windows path.
+
+Options:
+  -e, --escape    Double backslashes in the output
+
+Examples:
+  winpath
+  winpath /e/Projects/demo
+  winpath -e /e/Projects/demo
+EOF
+}
+
+escape=0
+target=
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -e|--escape|--escaped)
+            escape=1
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        --)
+            shift
+            if [ "$#" -gt 0 ]; then
+                target=$1
+                shift
+            fi
+            break
+            ;;
+        -*)
+            printf 'winpath: unknown option: %s\n\n' "$1" >&2
+            show_usage >&2
+            exit 2
+            ;;
+        *)
+            if [ -n "$target" ]; then
+                printf 'winpath: only one PATH argument is supported\n' >&2
+                exit 2
+            fi
+            target=$1
+            ;;
+    esac
+    shift
+done
+
+if [ "$#" -gt 0 ]; then
+    printf 'winpath: only one PATH argument is supported\n' >&2
+    exit 2
+fi
+
+if ! command -v cygpath >/dev/null 2>&1; then
+    printf 'winpath: cygpath is unavailable; run this command inside MSYS2\n' >&2
+    exit 127
+fi
+
+if [ -z "$target" ]; then
+    target=$(pwd -P)
+fi
+
+output=$(cygpath -aw -- "$target")
+if [ "$escape" -eq 1 ]; then
+    output=$(printf '%s' "$output" | sed 's/\\/\\\\/g')
+fi
+
+printf '%s\n' "$output"
