@@ -3,19 +3,24 @@ param(
     [Parameter(Position = 0)]
     [string] $Path,
 
+    [string] $MountRoot = $env:WSLPATH_MOUNT_ROOT,
+
     [switch] $Help
 )
 
 function Show-Usage {
     @'
 Usage:
-  mpath [PATH]
+  wslpath [PATH]
 
-Converts the current Windows directory, or PATH if provided, to an MSYS2 path.
+Converts the current Windows directory, or PATH if provided, to a WSL mount path.
+
+Environment:
+  WSLPATH_MOUNT_ROOT  Override the WSL automount root. Default: /mnt
 
 Examples:
-  mpath
-  mpath E:\Projects\demo
+  wslpath
+  wslpath C:\Projects\demo
 '@
 }
 
@@ -34,21 +39,26 @@ function Resolve-WindowsPath {
     }
 }
 
-function ConvertTo-Msys2Path {
-    param([string] $WindowsPath)
+function ConvertTo-WslMountPath {
+    param(
+        [string] $WindowsPath,
+        [string] $Root
+    )
 
     if ($WindowsPath -notmatch '^[A-Za-z]:[\\/]?') {
-        throw "Only drive-letter paths can be converted to MSYS2 paths: $WindowsPath"
+        throw "Only drive-letter paths can be converted to WSL mount paths: $WindowsPath"
     }
 
+    $normalizedRoot = if ([string]::IsNullOrWhiteSpace($Root)) { '/mnt' } else { $Root }
+    $normalizedRoot = '/' + $normalizedRoot.Trim('/')
     $drive = $WindowsPath.Substring(0, 1).ToLowerInvariant()
     $rest = $WindowsPath.Substring(2).TrimStart('\', '/') -replace '\\', '/'
 
     if ([string]::IsNullOrEmpty($rest)) {
-        return "/$drive"
+        return "$normalizedRoot/$drive"
     }
 
-    return "/$drive/$rest"
+    return "$normalizedRoot/$drive/$rest"
 }
 
 if ($Help -or $Path -in @('-h', '--help', '/?')) {
@@ -58,7 +68,7 @@ if ($Help -or $Path -in @('-h', '--help', '/?')) {
 
 try {
     $resolvedPath = Resolve-WindowsPath -InputPath $Path
-    ConvertTo-Msys2Path -WindowsPath $resolvedPath
+    ConvertTo-WslMountPath -WindowsPath $resolvedPath -Root $MountRoot
 }
 catch {
     Write-Error $_.Exception.Message

@@ -4,8 +4,8 @@ Portable helpers and sanitized terminal dotfiles for a productive Windows + WSL2
 
 ## Tools
 
-- `wpath`: convert a Windows path to a WSL mount path.
-- `mpath`: convert a Windows path to an MSYS2 path.
+- `wslpath`: convert a Windows path to a WSL mount path.
+- `msyspath`: convert a Windows path to an MSYS2 path.
 - `upath`: convert a WSL path to a Windows path or WSL UNC path.
 - `winpath`: convert an MSYS2 path to a Windows path.
 - `wslhere`: open WSL2 in Windows Terminal at the current PowerShell directory.
@@ -20,7 +20,7 @@ Windows:
 .\install.ps1 -AddToPath
 ```
 
-This copies `mpath`, `wpath`, and `wslhere` to `$HOME\bin`. With
+This copies `msyspath`, `wslpath`, and `wslhere` to `$HOME\bin`. With
 `-AddToPath`, the installer also adds that directory to the user `PATH` when
 needed. The operation is idempotent and can be run again after updating the
 repository.
@@ -52,7 +52,7 @@ Restart your shell after adding a directory to `PATH`.
 Verify the deployed commands:
 
 ```powershell
-mpath E:\workspace\config
+msyspath E:\workspace\config
 ```
 
 ```sh
@@ -64,13 +64,13 @@ winpath /e/workspace/config
 From Windows PowerShell:
 
 ```powershell
-wpath
+wslpath
 # /mnt/c/Projects/demo
 
-wpath C:\Projects\demo
+wslpath C:\Projects\demo
 # /mnt/c/Projects/demo
 
-mpath E:\Projects\demo
+msyspath E:\Projects\demo
 # /e/Projects/demo
 
 wslhere
@@ -102,12 +102,12 @@ winpath -e /e/Projects/demo
 
 ## Configuration
 
-`wpath` and `upath` assume the WSL automount root is `/mnt`.
+`wslpath` and `upath` assume the WSL automount root is `/mnt`.
 
 Override it when needed:
 
 ```powershell
-$env:WPATH_MOUNT_ROOT = "/run/desktop/mnt/host"
+$env:WSLPATH_MOUNT_ROOT = "/run/desktop/mnt/host"
 ```
 
 ```sh

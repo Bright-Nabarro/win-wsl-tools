@@ -8,10 +8,10 @@ $ErrorActionPreference = 'Stop'
 
 $sourceDir = Join-Path $PSScriptRoot 'bin'
 $files = @(
-    'mpath.cmd',
-    'mpath.ps1',
-    'wpath.cmd',
-    'wpath.ps1',
+    'msyspath.cmd',
+    'msyspath.ps1',
+    'wslpath.cmd',
+    'wslpath.ps1',
     'wslhere.cmd',
     'wslhere.ps1'
 )
