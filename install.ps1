@@ -1,45 +1,33 @@
 [CmdletBinding()]
 param(
-    [string] $InstallDir = (Join-Path $HOME 'bin'),
-    [switch] $AddToPath
+    [string] $Destination = (Join-Path $HOME 'bin'),
+    [switch] $AddToPath,
+    [switch] $Profile,
+    [switch] $All
 )
 
 $ErrorActionPreference = 'Stop'
-
 $sourceDir = Join-Path $PSScriptRoot 'bin'
-$files = @(
-    'msyspath.cmd',
-    'msyspath.ps1',
-    'wslpath.cmd',
-    'wslpath.ps1',
-    'wslhere.cmd',
-    'wslhere.ps1'
-)
+New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 
-New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-
-foreach ($file in $files) {
-    Copy-Item -LiteralPath (Join-Path $sourceDir $file) -Destination $InstallDir -Force
+foreach ($file in @('wslpath.ps1', 'wslpath.cmd', 'msyspath.ps1', 'msyspath.cmd', 'wslhere.ps1', 'wslhere.cmd')) {
+    Copy-Item -LiteralPath (Join-Path $sourceDir $file) -Destination (Join-Path $Destination $file) -Force
 }
+Write-Host "Installed CLI tools to $Destination"
 
-if ($AddToPath) {
-    $resolvedInstallDir = (Resolve-Path -LiteralPath $InstallDir).ProviderPath
+if ($AddToPath -or $All) {
     $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-    $parts = @($userPath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    $alreadyInPath = $parts | Where-Object {
-        $_.TrimEnd('\') -ieq $resolvedInstallDir.TrimEnd('\')
-    }
-
-    if (-not $alreadyInPath) {
-        $newPath = if ([string]::IsNullOrWhiteSpace($userPath)) {
-            $resolvedInstallDir
-        }
-        else {
-            $userPath.TrimEnd(';') + ';' + $resolvedInstallDir
-        }
-
-        [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+    $entries = @($userPath -split ';' | Where-Object { $_ })
+    if ($entries -notcontains $Destination) {
+        [Environment]::SetEnvironmentVariable('Path', (($entries + $Destination) -join ';'), 'User')
+        Write-Host "Added $Destination to User PATH"
     }
 }
 
-Write-Host "Installed Windows tools to $InstallDir"
+if ($Profile -or $All) {
+    $profileDir = Split-Path -Parent $PROFILE
+    New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'configs\powershell\Microsoft.PowerShell_profile.ps1') -Destination $PROFILE -Force
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'configs\powershell\fish-vim.omp.json') -Destination (Join-Path $profileDir 'fish-vim.omp.json') -Force
+    Write-Host "Installed PowerShell profile to $profileDir"
+}

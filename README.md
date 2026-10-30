@@ -1,131 +1,73 @@
 # win-wsl-tools
 
-Portable helpers and sanitized terminal dotfiles for a productive Windows + WSL2 + MSYS2 workflow.
+Windows、MSYS2（默认 `UCRT64`）与 WSL2 跨环境路径转换工具及终端配置集。
 
-## Tools
+## 目录结构
 
-- `wslpath`: convert a Windows path to a WSL mount path.
-- `msyspath`: convert a Windows path to an MSYS2 path.
-- `upath`: convert a WSL path to a Windows path or WSL UNC path.
-- `winpath`: convert an MSYS2 path to a Windows path.
-- `wslhere`: open WSL2 in Windows Terminal at the current PowerShell directory.
+```text
+├── bin/
+│   ├── msyspath.{ps1,cmd}   # Windows -> MSYS2 路径转换 (C:\foo -> /c/foo)
+│   ├── wslpath.{ps1,cmd}    # Windows -> WSL 路径转换 (C:\foo -> /mnt/c/foo)
+│   ├── wslhere.{ps1,cmd}    # 在当前目录打开 Windows Terminal WSL 标签页
+│   ├── winpath              # MSYS2 -> Windows 路径转换 (/c/foo -> C:\foo)
+│   └── upath                # WSL -> Windows 路径转换 (/mnt/c/foo -> C:\foo)
+├── configs/
+│   ├── msys2/
+│   │   ├── config.fish          # MSYS2 (UCRT64/CLANG64) Fish 配置（极速 Vi 模式提示符、OSC 9;9）
+│   │   └── functions/wrun.fish  # 使用纯净 Windows 注册表 PATH 运行命令或进入 pwsh
+│   ├── wsl/config.fish          # WSL Fish 配置
+│   ├── powershell/
+│   │   ├── Microsoft.PowerShell_profile.ps1  # PowerShell 7 Vi 模式 + PSReadLine 配置
+│   │   └── fish-vim.omp.json                 # Oh My Posh 主题
+│   ├── tmux/.tmux.conf          # tmux 配置（OSC 52 剪贴板、fish 默认 shell、窗口快捷键）
+│   ├── dev/{.clangd,.clang-format}
+│   └── windows-terminal/settings.portable.jsonc  # Windows Terminal 配置模板（默认 MSYS2 ucrt64）
+├── install.ps1
+├── install-msys2.sh
+└── install-wsl.sh
+```
 
-- [`powershell-fish-vim`](./powershell-fish-vim/): portable PowerShell, fish, Windows Terminal, WezTerm and C/C++ tooling configuration.
+## 快速安装
 
-## Deployment
-
-Windows:
+### Windows (PowerShell)
 
 ```powershell
+# 仅安装命令工具 (msyspath / wslpath / wslhere) 到 ~/bin
 .\install.ps1 -AddToPath
+
+# 同时安装命令工具与 PowerShell Profile 配置
+.\install.ps1 -All
 ```
 
-This copies `msyspath`, `wslpath`, and `wslhere` to `$HOME\bin`. With
-`-AddToPath`, the installer also adds that directory to the user `PATH` when
-needed. The operation is idempotent and can be run again after updating the
-repository.
-
-WSL:
+### MSYS2 (UCRT64 / CLANG64)
 
 ```sh
-./install-wsl.sh
-```
-
-This installs `upath` to `~/.local/bin`. Pass a directory as the first
-argument to use a different destination.
-
-MSYS2:
-
-```sh
+# 仅安装 winpath 到 /usr/local/bin
 ./install-msys2.sh
+
+# 安装 winpath + fish 配置 (含 wrun) + tmux + clang 配置
+./install-msys2.sh --all
 ```
 
-This installs `winpath` to `/usr/local/bin`, which is in the default MSYS2
-`PATH`. Pass a directory as the first argument to use a different destination:
+### WSL2
 
 ```sh
-./install-msys2.sh ~/.local/bin
+# 仅安装 upath 到 ~/.local/bin
+./install-wsl.sh
+
+# 安装 upath + fish + tmux + clang 配置
+./install-wsl.sh --all
 ```
 
-Restart your shell after adding a directory to `PATH`.
+## 常用命令与函数
 
-Verify the deployed commands:
-
-```powershell
-msyspath E:\workspace\config
-```
-
-```sh
-winpath /e/workspace/config
-```
-
-## Usage
-
-From Windows PowerShell:
-
-```powershell
-wslpath
-# /mnt/c/Projects/demo
-
-wslpath C:\Projects\demo
-# /mnt/c/Projects/demo
-
-msyspath E:\Projects\demo
-# /e/Projects/demo
-
-wslhere
-# Opens a new Windows Terminal tab using a WSL profile at the current directory.
-```
-
-From WSL:
-
-```sh
-upath /mnt/c/Projects/demo
-# C:\Projects\demo
-
-upath -e /mnt/c/Projects/demo
-# C:\\Projects\\demo
-
-upath /home/user/project
-# \\wsl.localhost\Ubuntu\home\user\project
-```
-
-From MSYS2:
-
-```sh
-winpath /e/Projects/demo
-# E:\Projects\demo
-
-winpath -e /e/Projects/demo
-# E:\\Projects\\demo
-```
-
-## Configuration
-
-`wslpath` and `upath` assume the WSL automount root is `/mnt`.
-
-Override it when needed:
-
-```powershell
-$env:WSLPATH_MOUNT_ROOT = "/run/desktop/mnt/host"
-```
-
-```sh
-export UPATH_MOUNT_ROOT=/mnt
-```
-
-`wslhere` tries to use an existing Windows Terminal WSL profile. Selection order:
-
-1. `-Profile` argument or `WSLHERE_PROFILE` environment variable.
-2. `-Distro` argument or `WSLHERE_DISTRO` environment variable.
-3. Windows Terminal default profile, if it is a WSL profile.
-4. First WSL-looking profile in Windows Terminal settings.
-5. Plain `wsl.exe` fallback.
-
-Examples:
-
-```powershell
-wslhere -Profile Ubuntu-24.04
-wslhere -Distro Ubuntu-24.04
-setx WSLHERE_PROFILE Ubuntu-24.04
-```
+| 环境 | 命令 | 说明 |
+| --- | --- | --- |
+| Windows | `msyspath [PATH]` | 将当前目录或指定路径转为 MSYS2 路径（如 `/c/Users/...`） |
+| Windows | `wslpath [PATH]` | 将当前目录或指定路径转为 WSL 挂载路径（如 `/mnt/c/Users/...`） |
+| Windows | `wslhere [PATH]` | 在 Windows Terminal 中打开对应目录的 WSL2 标签页 |
+| MSYS2 | `winpath [-e] [PATH]` | 将 MSYS2 路径转为 Windows 路径（`-e` 输出双反斜杠转义） |
+| MSYS2 | `wrun [cmd args...]` | 使用纯净 Windows 注册表 `Path` 执行命令/批处理；无参数时启动交互式 `pwsh` |
+| WSL2 | `upath [-e] [PATH]` | 将 WSL 路径转为 Windows 路径或 `\\wsl.localhost\...` UNC 路径 |
+| Fish / PWSH | `ep` | 在资源管理器中打开当前目录 |
+| Fish | `cppc` / `ccc` | 使用 `g++`/`gcc`（或回退 `clang++`/`clang`）以 C++23 / C23 标准带调试符号编译 |
