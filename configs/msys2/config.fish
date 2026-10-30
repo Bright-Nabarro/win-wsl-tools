@@ -49,10 +49,10 @@ if status is-interactive
         end
         set -l status_prefix ''
         if test $last_status -ne 0
-            set status_prefix "\e[31m[$last_status]\e[0m "
+            set status_prefix \e"[31m[$last_status]"\e"[0m "
         end
         printf '\e[32m%s@%s\e[0m \e[33m%s\e[0m%s %s%s ' \
-            "$USER" "$hostname" (prompt_pwd) (fish_vcs_prompt) "$status_prefix" "$prompt_symbol"
+            "$USER" "$hostname" "$(prompt_pwd)" "$(fish_vcs_prompt)" "$status_prefix" "$prompt_symbol"
     end
 
     # 默认 fish_title 每次切模式也会跑一轮 `status current-command` + `prompt_pwd`；
